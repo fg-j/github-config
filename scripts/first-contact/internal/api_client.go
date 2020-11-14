@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -9,6 +10,11 @@ import (
 //go:generate faux --interface HTTPClient --output fakes/http_client.go
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
+}
+
+//go:generate faux --interface Client --output fakes/client.go
+type Client interface {
+	Get(path string, params ...string) ([]byte, error)
 }
 
 type APIClient struct {
@@ -22,7 +28,7 @@ func NewAPIClient(serverURL string, httpClient HTTPClient) APIClient {
 		client: httpClient}
 }
 
-func (c *APIClient) Get(path string, params ...string) (*http.Response, error) {
+func (c *APIClient) Get(path string, params ...string) ([]byte, error) {
 
 	uri, err := url.Parse(c.ServerURL)
 	if err != nil {
@@ -45,5 +51,8 @@ func (c *APIClient) Get(path string, params ...string) (*http.Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("client couldn't make HTTP request: %s", err)
 	}
-	return response, nil
+
+	body, err := ioutil.ReadAll(response.Body)
+
+	return body, nil
 }

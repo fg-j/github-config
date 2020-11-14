@@ -11,5 +11,6 @@ func TestInternal(t *testing.T) {
 	suite := spec.New("scripts/first-contact/internal", spec.Report(report.Terminal{}))
 	suite("TestIssue", testIssue)
 	suite("TestAPIClient", testAPIClient)
+	suite("TestRepository", testRepository)
 	suite.Run(t)
 }
