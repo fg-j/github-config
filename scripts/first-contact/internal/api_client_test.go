@@ -44,13 +44,17 @@ func testAPIClient(t *testing.T, context spec.G, it spec.S) {
 			})
 		})
 
-		context.Focus("when params are provided", func() {
-			it("makes an HTTP request with those params", func() {
-				apiClient.Get("/my/test/endpoint", "per_page=100", "state=open")
+		context("when params are provided", func() {
+			it.Before(func() {
+				doBody := ioutil.NopCloser(bytes.NewReader([]byte("some body")))
+				httpClient.DoCall.Returns.Response = &http.Response{StatusCode: 200, Body: doBody}
+			})
 
-				// Expect(err).NotTo(HaveOccurred())
-				// Expect(httpClient.DoCall).NotTo(BeNil())
-				// Expect(httpClient.DoCall.Receives.Req.URL.RawQuery).To(Equal("per_page=100&state=open"))
+			it("makes an HTTP request with those params", func() {
+				_, err := apiClient.Get("/my/test/endpoint", "per_page=100", "state=open")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(httpClient.DoCall.Receives.Req.URL.RawQuery).To(Equal("per_page=100&state=open"))
 			})
 		})
 

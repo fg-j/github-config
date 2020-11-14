@@ -52,7 +52,5 @@ func (c *APIClient) Get(path string, params ...string) ([]byte, error) {
 		return nil, fmt.Errorf("client couldn't make HTTP request: %s", err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-
-	return body, nil
+	return ioutil.ReadAll(response.Body)
 }

@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -49,17 +50,32 @@ func (r *Repository) GetRecentIssues(client Client, clock Clock) ([]Issue, error
 		"per_page=100",
 		fmt.Sprintf("since=%s", timeString))
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("getting recent issues: %s", err)
 	}
 
 	issues := []Issue{}
 	err = json.Unmarshal(body, &issues)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("getting recent issues: could not unmarshal JSON '%s' : %s", string(body), err)
 	}
 	return issues, nil
 }
 
-func (r *Repository) GetFirstContactTimes(client APIClient, output chan TimeContainer) {
-
+func (r *Repository) GetFirstContactTimes(client Client, issues []CommentGetter, output chan TimeContainer) {
+	for _, issue := range issues {
+		comment, err := issue.GetFirstReply()
+		if err != nil {
+			panic(err)
+		}
+		replyCreated, err := time.Parse(time.RFC3339, comment.CreatedAt)
+		if err != nil {
+			panic(err)
+		}
+		issueCreated, err := time.Parse(time.RFC3339, issue.GetCreatedAt())
+		if err != nil {
+			panic(err)
+		}
+		replyTime := math.Round(replyCreated.Sub(issueCreated).Minutes())
+		output <- TimeContainer{Time: replyTime, Error: nil}
+	}
 }

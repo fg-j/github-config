@@ -1,7 +1,5 @@
 package internal
 
-import "fmt"
-
 type TimeContainer struct {
 	Time  float64
 	Error error
@@ -20,6 +18,16 @@ type Comment struct {
 	CreatedAt string `json:"created_at"`
 }
 
-func main() {
-	fmt.Println("vim-go")
+//go:generate faux --interface CommentGetter --output fakes/comment_getter.go
+type CommentGetter interface {
+	GetFirstReply() (Comment, error)
+	GetCreatedAt() string
+}
+
+func (i *Issue) GetComments() ([]Comment, error) {
+	return nil, nil
+}
+
+func (i *Issue) GetCreatedAt() string {
+	return ""
 }
