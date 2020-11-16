@@ -9,6 +9,9 @@ type Issue struct {
 	CreatedAt   string `json:"created_at"`
 	NumComments int    `json:"comments"`
 	CommentsURL string `json:"comments_url"`
+	User        struct {
+		Login string `json:"login"`
+	} `json:"user"`
 }
 
 type Comment struct {
@@ -22,6 +25,7 @@ type Comment struct {
 type CommentGetter interface {
 	GetFirstReply() (Comment, error)
 	GetCreatedAt() string
+	GetUserLogin() string
 }
 
 func (i *Issue) GetComments() ([]Comment, error) {
@@ -29,5 +33,9 @@ func (i *Issue) GetComments() ([]Comment, error) {
 }
 
 func (i *Issue) GetCreatedAt() string {
+	return ""
+}
+
+func (i *Issue) GetUserLogin() string {
 	return ""
 }

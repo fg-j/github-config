@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -61,12 +62,25 @@ func (r *Repository) GetRecentIssues(client Client, clock Clock) ([]Issue, error
 	return issues, nil
 }
 
-func (r *Repository) GetFirstContactTimes(client Client, issues []CommentGetter, output chan TimeContainer) {
+func (r *Repository) GetFirstContactTimes(client Client, issues []CommentGetter, clock Clock, output chan TimeContainer) {
 	for _, issue := range issues {
-		comment, err := issue.GetFirstReply()
-		if err != nil {
-			panic(err)
+		if strings.Contains(issue.GetUserLogin(), "bot") {
+			continue
 		}
+
+		comment, err := issue.GetFirstReply()
+
+		if err != nil {
+			output <- TimeContainer{Error: fmt.Errorf("error getting first contact times for repo %s: %s", r.Name, err)}
+			close(output)
+			return
+		}
+		// TODO: feels a little weird converting to string and then back again
+		// TODO: decide if we actually want to include issues without comments on them
+		if comment.CreatedAt == "" {
+			comment.CreatedAt = clock.Now().UTC().Format(time.RFC3339)
+		}
+
 		replyCreated, err := time.Parse(time.RFC3339, comment.CreatedAt)
 		if err != nil {
 			panic(err)
@@ -78,4 +92,5 @@ func (r *Repository) GetFirstContactTimes(client Client, issues []CommentGetter,
 		replyTime := math.Round(replyCreated.Sub(issueCreated).Minutes())
 		output <- TimeContainer{Time: replyTime, Error: nil}
 	}
+	close(output)
 }
